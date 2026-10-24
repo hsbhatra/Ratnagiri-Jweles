@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand tokens — sourced from the RatnaGiri Jewels logo (deep forest green + gold) */
+  --color-brand-forest-950: #0a2b22;
+  --color-brand-forest-900: #0e3b2e;
+  --color-brand-forest-800: #164a3a;
+  --color-brand-forest-700: #1f5c48;
+
+  --color-brand-gold-600: #a9801f;
+  --color-brand-gold-500: #c9a227;
+  --color-brand-gold-400: #dcb94e;
+  --color-brand-gold-300: #e8cd7f;
+
+  --color-brand-linen-100: #f6f1e7;
+  --color-brand-linen-200: #ece4d3;
+
+  --font-display: "Cormorant Garamond", "Playfair Display", serif;
+  --font-body: "Inter", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  background-color: var(--color-brand-linen-100);
+  color: var(--color-brand-forest-950);
+  font-family: var(--font-body);
+}

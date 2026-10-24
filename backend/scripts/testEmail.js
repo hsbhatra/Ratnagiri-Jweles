@@ -1,0 +1,24 @@
+/**
+ * Sends one sample verification email so you can check delivery and how it looks.
+ * Usage: npm run email:test -- you@example.com
+ */
+import { sendOtpEmail, verifyEmailTransport } from '../src/services/email.service.js'
+
+const to = process.argv[2]
+if (!to) {
+  console.error('Usage: npm run email:test -- you@example.com')
+  process.exit(1)
+}
+
+try {
+  const status = await verifyEmailTransport()
+  console.log(`Provider: ${status.provider}  From: ${status.from}`)
+  await sendOtpEmail({ to, name: 'Test', code: '123456', purpose: 'registration', ttlMin: 10 })
+  console.log(status.provider === 'console' ? 'Printed above (no provider configured).' : `Sent to ${to} — check the inbox and spam folder.`)
+} catch (err) {
+  console.error(`Failed: ${err.message}`)
+  if (/Invalid login|535|Username and Password not accepted/i.test(err.message)) {
+    console.error('Gmail rejected the login: use a 16-character App Password, not your normal password.')
+  }
+  process.exit(1)
+}

@@ -1,0 +1,52 @@
+# Netlify — storefront (frontend/). Testing site: deploys the `testing` branch.
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# The API lives on Render. Proxying /api/* through Netlify keeps it same-origin, so the
+# SameSite=strict session cookies work. Netlify signs each proxied call with the secret in
+# the API_SIGNATURE_TOKEN site variable; Render checks it (EDGE_PROXY_SECRET, same value).
+# >>> If Render gave your service a different URL, change it here. <<<
+[[redirects]]
+  from = "/api/*"
+  to = "https://ratnagiri-api-testing.onrender.com/api/:splat"
+  status = 200
+  force = true
+  signed = "API_SIGNATURE_TOKEN"
+
+# Single-page app: every other route is handled by React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # Testing server: keep it out of search results. Remove for the production site.
+    X-Robots-Tag = "noindex, nofollow"
+
+# Hashed build files never change
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Storyboard frames and clips: big, and rarely change — cache for a week
+[[headers]]
+  for = "/frames/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/media/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

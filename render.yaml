@@ -1,0 +1,36 @@
+# Render Blueprint — API (backend/). Testing service: deploys the `testing` branch.
+# Values marked sync: false are typed into the Render dashboard when the Blueprint is
+# created (they are secrets and never live in git).
+services:
+  - type: web
+    name: ratnagiri-api-testing
+    runtime: node
+    plan: free
+    region: singapore
+    branch: testing
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_ORIGIN
+        sync: false # e.g. https://ratnagiri-testing.netlify.app
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: OTP_HASH_SECRET
+        generateValue: true
+      - key: EDGE_PROXY_SECRET
+        sync: false # same value as API_SIGNATURE_TOKEN on Netlify
+      - key: UPSTASH_REDIS_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: RatnaGiri Jewels <onboarding@resend.dev>
+      - key: EMAIL_REPLY_TO
+        sync: false
