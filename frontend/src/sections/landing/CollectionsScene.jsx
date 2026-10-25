@@ -17,7 +17,7 @@ export default function CollectionsScene() {
   const sectionRef = useRevealOnScroll({ reducedMotion })
 
   return (
-    <section ref={sectionRef} className="bg-brand-linen-100 px-6 py-24 md:px-16">
+    <section ref={sectionRef} data-intro-end className="bg-brand-linen-100 px-6 py-24 md:px-16">
       <h2 className="font-display mb-12 text-center text-3xl text-brand-forest-900 md:text-4xl">
         Collections
       </h2>

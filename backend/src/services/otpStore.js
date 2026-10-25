@@ -1,5 +1,6 @@
 import Redis from 'ioredis'
 import { env } from '../config/env.js'
+import describeRedisUrl from '../utils/describeRedisUrl.js'
 
 /**
  * Tiny key/value-with-TTL store for OTPs (Architecture §4.3: Redis, not Mongo).
@@ -44,8 +45,19 @@ class MemoryStore {
 
 class RedisStore {
   constructor(url) {
-    this.client = new Redis(url, { maxRetriesPerRequest: 2, lazyConnect: false })
-    this.client.on('error', (err) => console.error('[redis]', err.message))
+    const where = describeRedisUrl(url)
+    if (url.startsWith('redis://') && /upstash\.io/.test(url)) {
+      console.warn(`[redis] ${where} — Upstash needs TLS: the URL must start with rediss:// (two s)`)
+    }
+    this.client = new Redis(url, { maxRetriesPerRequest: 2, connectTimeout: 10_000 })
+    this.client.on('ready', () => console.log(`[redis] connected to ${where}`))
+    let lastError = ''
+    this.client.on('error', (err) => {
+      // ioredis retries forever; log each distinct problem once instead of every retry
+      if (err.message === lastError) return
+      lastError = err.message
+      console.error(`[redis] ${where}: ${err.message}`)
+    })
   }
   get(key) {
     return this.client.get(key)

@@ -9,6 +9,7 @@ import {
   chainForwardFrom,
   registerScene,
   releaseAutoplay,
+  skipIntro,
 } from './scrollAutoplay'
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin)
@@ -30,8 +31,8 @@ const HANDOFF_SECONDS = 0.9 // gliding the next section into place after the las
  * is in place — and if that section is another scene it carries straight on, so the
  * scenes play as one continuous film (see chaining in scrollAutoplay.js). Scrolling up into a scene plays it backwards the same way
  * and stops at the scene's start. The user's own scroll input is held meanwhile
- * (see scrollAutoplay.js); Escape or the Skip button jump to the end of the current
- * scene, and the next scene then starts by itself.
+ * (see scrollAutoplay.js); Escape or the Skip button leave the whole intro and glide to
+ * the first section after it (scrolling backwards they just finish the current scene).
  *
  * framePath(n) -> URL string for 1-indexed frame n (frames live in
  * public/, fetched at runtime rather than bundled as 150 JS imports).
@@ -141,7 +142,18 @@ export default function useFrameScrubScene({ frameCount, framePath, reducedMotio
         const height = section.offsetHeight
         const span = Math.max(1, trigger.end - trigger.start)
         const zoneEnd = trigger.end + height // where the next section sits at the top
-        const controller = { skip: () => timeline?.progress(1) }
+        let ended = false
+        let handOver = true
+        const controller = {
+          // Forwards, Skip leaves the whole intro; backwards it just finishes this scene
+          skip: () => (direction > 0 ? skipIntro() : timeline?.progress(1)),
+          // Stop where we are, without handing over to the next scene (used by skipIntro)
+          cancel: () => {
+            handOver = false
+            timeline?.kill()
+            finish()
+          },
+        }
         if (!acquireAutoplay(controller)) return
 
         const scrollTo = (target) => ({ y: target, autoKill: false })
@@ -176,12 +188,14 @@ export default function useFrameScrubScene({ frameCount, framePath, reducedMotio
         setPlaying(true)
 
         function finish() {
+          if (ended) return
+          ended = true
           releaseAutoplay(controller)
           skipRef.current = null
           setPlaying(false)
           lastY = window.scrollY
           // Forward play (finished or skipped) hands over to the next scene, if there is one
-          if (direction > 0) chainForwardFrom(lastY)
+          if (direction > 0 && handOver) chainForwardFrom(lastY)
         }
       }
 

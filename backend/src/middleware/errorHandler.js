@@ -16,6 +16,12 @@ export function errorHandler(err, req, res, next) { // eslint-disable-line no-un
     return sendError(res, 400, 'Malformed JSON body', 'BAD_JSON')
   }
 
+  // OTP store (Redis) unreachable: tell the visitor it's temporary instead of a bare 500
+  if (err.name === 'MaxRetriesPerRequestError' || /ECONNRESET|ECONNREFUSED|ETIMEDOUT|Connection is closed/.test(err.message)) {
+    console.error('[redis] request failed:', err.message)
+    return sendError(res, 503, 'Something on our side is briefly unavailable. Please try again in a minute.', 'SERVICE_UNAVAILABLE')
+  }
+
   const status = err.status || err.statusCode || 500
   if (status >= 500) console.error(err)
 

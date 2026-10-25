@@ -4,9 +4,14 @@
  * uninterrupted at its natural speed; Escape or the scene's Skip button finish it
  * immediately (WCAG 2.2.2: moving content longer than 5s must be stoppable).
  */
+import gsap from 'gsap'
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
+
+gsap.registerPlugin(ScrollToPlugin)
+
 const SCROLL_KEYS = new Set([' ', 'Spacebar', 'PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End'])
 
-let active = null // { skip: () => void }
+let active = null // { skip: () => void, cancel?: () => void }
 let cooldownUntil = 0
 
 function isTypingTarget(el) {
@@ -83,4 +88,27 @@ export function chainForwardFrom(y) {
 /** The visitor moved on before a pending hand-off could start — drop it. */
 export function cancelPendingChain(y) {
   if (pendingChainY !== null && Math.abs(y - pendingChainY) >= AT) pendingChainY = null
+}
+
+// ---------------------------------------------------------------- skip the whole intro
+/**
+ * Skip leaves the animated intro altogether: the playing scene stops (without handing
+ * over to the next one) and the page glides to the first section after the intro, the
+ * one marked `data-intro-end` (Collections). Input stays held during the glide so the
+ * scenes it passes through don't start playing.
+ */
+export function skipIntro() {
+  active?.cancel?.()
+  pendingChainY = null
+  const target = document.querySelector('[data-intro-end]')
+  if (!target) return
+  const glide = { skip() {} }
+  if (!acquireAutoplay(glide)) return
+  gsap.to(window, {
+    scrollTo: { y: target, autoKill: false },
+    duration: 1.2,
+    ease: 'power2.inOut',
+    onComplete: () => releaseAutoplay(glide),
+    onInterrupt: () => releaseAutoplay(glide),
+  })
 }

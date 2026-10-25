@@ -1,6 +1,5 @@
 import { Helmet } from 'react-helmet-async'
 import HeroScene from '../../sections/landing/HeroScene'
-import OutInTheWorldScene from '../../sections/landing/OutInTheWorldScene'
 import CloserLookScene from '../../sections/landing/CloserLookScene'
 import StoneToSettingScene from '../../sections/landing/StoneToSettingScene'
 import CollectionsScene from '../../sections/landing/CollectionsScene'
@@ -21,7 +20,6 @@ export default function LandingPage() {
       <AccountLink />
       <main>
         <HeroScene />
-        <OutInTheWorldScene />
         <CloserLookScene />
         <StoneToSettingScene />
         <CollectionsScene />

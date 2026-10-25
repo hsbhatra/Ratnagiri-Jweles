@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed:admin": "node scripts/seedAdmin.js",
-    "email:test": "node scripts/testEmail.js"
+    "email:test": "node scripts/testEmail.js",
+    "redis:check": "node scripts/checkRedis.js"
   },
   "keywords": [],
   "author": "",

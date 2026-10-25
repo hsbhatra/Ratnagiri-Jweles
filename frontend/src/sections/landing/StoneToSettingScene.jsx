@@ -6,7 +6,7 @@ import useReducedMotion from '../../lib/useReducedMotion'
 gsap.registerPlugin(ScrollToPlugin)
 
 /**
- * "Stone to Setting": three short clips (loose stone → finished silver piece) that play
+ * "Stone to Setting": two short clips (loose stone → finished silver piece) that play
  * one after another on their own once the chapter is on screen — no scroll-scrubbing.
  * Each stone's caption reveals when its piece is complete; the closing link reveals
  * after the last one. "Next" jumps to the following stone; on the last stone "Skip" (or
@@ -17,7 +17,6 @@ gsap.registerPlugin(ScrollToPlugin)
 const STONES = [
   { id: 'yellow', label: 'Citrine', piece: 'Ring', link: 'See rings', href: '/collections/rings', dot: '#e0a43a' },
   { id: 'blue', label: 'London Blue Topaz', piece: 'Pendant', link: 'See necklaces', href: '/collections/necklaces', dot: '#2f7fa8' },
-  { id: 'green', label: 'Emerald', piece: 'Ring', link: 'See rings', href: '/collections/rings', dot: '#3fa36b' },
 ]
 const PLAYBACK_RATE = 1.25 // a touch quicker than generated, to keep the chapter brisk
 const LAST = STONES.length - 1
@@ -34,7 +33,7 @@ export default function StoneToSettingScene() {
   const [near, setNear] = useState(false) // start downloading only when the chapter is close
   const [inView, setInView] = useState(false)
   const [active, setActive] = useState(0)
-  const [done, setDone] = useState([false, false, false])
+  const [done, setDone] = useState(() => STONES.map(() => false))
   const [paused, setPaused] = useState(false)
   const [autoplayBlocked, setAutoplayBlocked] = useState(false)
   const [progress, setProgress] = useState(0)

@@ -46,6 +46,9 @@ Production refuses to start without Redis, so the testing server needs it. Local
    Copy the text inside the quotes — it starts with **`rediss://`** (two s = encrypted). That is `UPSTASH_REDIS_URL`.
    (Don't use the REST URL/token — the backend talks plain Redis.)
 5. Treat it like a password: it goes only into Render's environment variables.
+   To test a URL before using it: put it in `backend/.env` as `UPSTASH_REDIS_URL=…` (no quotes),
+   run `cd backend && npm run redis:check` → it should print `OK — Redis works.` Then remove it
+   from `.env` again if you want local OTPs kept in memory.
 6. Check later: after a test sign-up on the testing server, open **Data Browser** in Upstash — an
    OTP key appears and disappears after 10 minutes.
 

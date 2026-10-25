@@ -8,11 +8,11 @@ Tick on desktop Chrome **and** a real phone. Log any failure in `BUGS.md`.
 - [ ] `cd frontend && npm run lint && npm run build` — no errors
 
 ## Landing page
-- [ ] Hero shows title; one scroll plays Scene 1 → 2 → 3 by themselves
-- [ ] Skip (and Esc) ends the current scene; the next one starts by itself
+- [ ] Hero shows title; one scroll plays Scene 1 → 2 → Stone to Setting by themselves
+- [ ] Skip (and Esc) leaves the whole intro and glides to Collections
 - [ ] Scrolling up inside a scene plays it backwards to its start
-- [ ] Stone to Setting: Citrine → London Blue Topaz → Emerald play in turn; captions + links appear
-- [ ] "Next" moves to the next stone; "Skip" on Emerald (or Emerald ending) moves to Collections
+- [ ] Stone to Setting: Citrine → London Blue Topaz play in turn; captions + links appear
+- [ ] "Next" moves to the next stone; "Skip" on the last stone (or it ending) moves to Collections
 - [ ] With OS "reduce motion" on: no autoplay, final frames / stills shown
 - [ ] No horizontal scroll at 360 px width
 
