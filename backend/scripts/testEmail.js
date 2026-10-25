@@ -2,7 +2,8 @@
  * Sends one sample verification email so you can check delivery and how it looks.
  * Usage: npm run email:test -- you@example.com
  */
-import { sendOtpEmail, verifyEmailTransport } from '../src/services/email.service.js'
+process.env.EMAIL_STRICT = '1' // report Brevo errors instead of falling back to printing
+const { sendOtpEmail, verifyEmailTransport } = await import('../src/services/email.service.js')
 
 const to = process.argv[2]
 if (!to) {

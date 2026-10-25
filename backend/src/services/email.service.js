@@ -53,6 +53,25 @@ async function brevoMessage(res) {
   }
 }
 
+const looksLikeEmail = (v) => /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(v || '')
+
+/**
+ * EMAIL_REPLY_TO accepts "you@x.com" or "Name <you@x.com>". Brevo rejects the whole email
+ * if it's malformed, so anything that isn't a real address is ignored (with a warning).
+ */
+let warnedReplyTo = false
+function replyToAddress() {
+  const raw = (process.env.EMAIL_REPLY_TO || '').trim().replace(/^["']|["']$/g, '')
+  if (!raw) return undefined
+  const { name, email } = parseAddress(raw)
+  if (looksLikeEmail(email)) return name ? { name, email } : { email }
+  if (!warnedReplyTo) {
+    warnedReplyTo = true
+    console.warn(`[email] EMAIL_REPLY_TO "${raw}" is not a valid email address — ignoring it`)
+  }
+  return undefined
+}
+
 function printEmail({ to, subject, text }) {
   console.info(`\n[email:dev] To: ${to}\n[email:dev] Subject: ${subject}\n[email:dev] ${text}\n`)
 }
@@ -67,7 +86,7 @@ export async function sendEmail({ to, subject, html, text }) {
     return
   }
 
-  const replyTo = process.env.EMAIL_REPLY_TO ? { email: process.env.EMAIL_REPLY_TO } : undefined
+  const replyTo = replyToAddress()
   const res = await fetch(BREVO_URL, {
     method: 'POST',
     headers: { 'api-key': env.brevoApiKey, 'content-type': 'application/json', accept: 'application/json' },
@@ -76,8 +95,9 @@ export async function sendEmail({ to, subject, html, text }) {
   if (res.ok) return
 
   const message = await brevoMessage(res)
-  // Locally, still let you finish a sign-up when Brevo refuses (bad key, unverified sender)
-  if (!env.isProd) {
+  // Locally, still let you finish a sign-up when Brevo refuses (bad key, unverified sender).
+  // `npm run email:test` sets EMAIL_STRICT so it reports the real error instead.
+  if (!env.isProd && !process.env.EMAIL_STRICT) {
     console.warn(`[email] Brevo refused (${res.status} ${message}) — printing instead (dev only)`)
     printEmail({ to, subject, text })
     return
