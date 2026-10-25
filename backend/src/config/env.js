@@ -29,8 +29,8 @@ export const env = {
   edgeProxySecret: process.env.EDGE_PROXY_SECRET,
 
   // Providers
-  resendApiKey: process.env.RESEND_API_KEY,
-  emailFrom: process.env.EMAIL_FROM || 'RatnaGiri Jewels <onboarding@resend.dev>',
+  brevoApiKey: process.env.BREVO_API_KEY,
+  emailFrom: process.env.EMAIL_FROM, // a sender verified in Brevo, e.g. RatnaGiri Jewels <you@gmail.com>
   razorpayKeyId: process.env.RAZORPAY_KEY_ID,
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
   cloudinaryUrl: process.env.CLOUDINARY_URL,

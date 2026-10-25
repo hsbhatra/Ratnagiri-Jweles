@@ -17,8 +17,11 @@ try {
   console.log(status.provider === 'console' ? 'Printed above (no provider configured).' : `Sent to ${to} — check the inbox and spam folder.`)
 } catch (err) {
   console.error(`Failed: ${err.message}`)
-  if (/Invalid login|535|Username and Password not accepted/i.test(err.message)) {
-    console.error('Gmail rejected the login: use a 16-character App Password, not your normal password.')
+  if (/unrecognised IP|not authori[sz]ed/i.test(err.message)) {
+    console.error('Brevo blocked this IP: Brevo > your name > Security > Authorized IPs > deactivate blocking.')
+  }
+  if (/sender/i.test(err.message)) {
+    console.error('EMAIL_FROM must be a sender verified in Brevo (Senders, domains & dedicated IPs > Senders).')
   }
   process.exit(1)
 }

@@ -26,9 +26,7 @@
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.11.4",
-    "morgan": "^1.12.1",
-    "nodemailer": "^10.2.1",
-    "resend": "^6.34.1"
+    "morgan": "^1.12.1"
   },
   "devDependencies": {
     "mongodb-memory-server": "^11.3.0",

@@ -1,62 +1,60 @@
-import nodemailer from 'nodemailer'
-import { Resend } from 'resend'
 import { env } from '../config/env.js'
 
 /**
- * One send() for the whole app, three interchangeable transports:
- *  - resend : production, once the store's own domain is verified in Resend
- *  - smtp   : any SMTP inbox (e.g. a Gmail address + app password) — works today, before
- *             a domain exists, and can email anyone (Gmail caps ~500/day)
- *  - console: local dev fallback, prints the email to the backend terminal
- * EMAIL_PROVIDER picks one explicitly; otherwise the first configured one wins.
+ * One send() for the whole app:
+ *  - brevo  : the provider on every environment (dev, testing, production). Uses Brevo's
+ *             HTTPS API, not SMTP, so it works on hosts that block SMTP ports (Render free).
+ *             EMAIL_FROM must be a sender verified in Brevo (Senders, domains & dedicated IPs).
+ *  - console: prints the email to the backend terminal when BREVO_API_KEY is empty (dev only).
  */
+
+const BREVO_URL = 'https://api.brevo.com/v3/smtp/email'
 
 /** Test hook: tests read the last code sent to an address instead of a real inbox. */
 export const sentEmails = []
 
-function pickProvider() {
-  const wanted = (process.env.EMAIL_PROVIDER || '').toLowerCase()
-  if (wanted) return wanted
-  if (env.resendApiKey) return 'resend'
-  if (process.env.SMTP_HOST && process.env.SMTP_USER) return 'smtp'
-  return 'console'
-}
+const provider = env.isTest ? 'test' : env.brevoApiKey ? 'brevo' : 'console'
 
-const provider = env.isTest ? 'test' : pickProvider()
-
-let resend = null
-let smtp = null
-if (provider === 'resend') {
-  if (!env.resendApiKey) throw new Error('[email] EMAIL_PROVIDER=resend but RESEND_API_KEY is empty')
-  resend = new Resend(env.resendApiKey)
-}
-if (provider === 'smtp') {
-  const port = Number(process.env.SMTP_PORT || 465)
-  smtp = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port,
-    secure: port === 465,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  })
-}
 if (provider === 'console' && env.isProd) {
-  throw new Error('[email] No email provider configured — set RESEND_API_KEY or SMTP_* in production')
+  throw new Error('[email] BREVO_API_KEY is required in production')
 }
 
-/** Who the email appears to come from. Gmail rewrites any other address to the account's own. */
-function fromAddress() {
-  if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM
-  if (provider === 'smtp') return `RatnaGiri Jewels <${process.env.SMTP_USER}>`
-  return env.emailFrom
+/** "RatnaGiri Jewels <hello@x.com>" -> { name, email } */
+function parseAddress(value) {
+  const m = String(value || '').match(/^\s*(?:"?([^"<]*?)"?\s*)?<([^>]+)>\s*$/)
+  if (m) return { name: m[1]?.trim() || undefined, email: m[2].trim() }
+  return { email: String(value || '').trim() }
+}
+
+const sender = parseAddress(env.emailFrom)
+if (provider === 'brevo' && !sender.email) {
+  throw new Error('[email] EMAIL_FROM must be set to a sender verified in Brevo')
 }
 
 export function emailStatus() {
-  return { provider, from: provider === 'test' ? null : fromAddress() }
+  return { provider, from: provider === 'test' ? null : env.emailFrom || null }
 }
 
+/** Checks the API key and that the account answers (used at boot and by email:test). */
 export async function verifyEmailTransport() {
-  if (smtp) await smtp.verify()
+  if (provider === 'brevo') {
+    const res = await fetch('https://api.brevo.com/v3/account', { headers: { 'api-key': env.brevoApiKey, accept: 'application/json' } })
+    if (!res.ok) throw new Error(`Brevo rejected the API key (${res.status}): ${await brevoMessage(res)}`)
+  }
   return emailStatus()
+}
+
+async function brevoMessage(res) {
+  try {
+    const body = await res.json()
+    return body.message || body.code || res.statusText
+  } catch {
+    return res.statusText
+  }
+}
+
+function printEmail({ to, subject, text }) {
+  console.info(`\n[email:dev] To: ${to}\n[email:dev] Subject: ${subject}\n[email:dev] ${text}\n`)
 }
 
 export async function sendEmail({ to, subject, html, text }) {
@@ -65,20 +63,26 @@ export async function sendEmail({ to, subject, html, text }) {
     return
   }
   if (provider === 'console') {
-    console.info(`\n[email:dev] To: ${to}\n[email:dev] Subject: ${subject}\n[email:dev] ${text}\n`)
+    printEmail({ to, subject, text })
     return
   }
-  const replyTo = process.env.EMAIL_REPLY_TO || undefined
-  if (provider === 'resend') {
-    const { error } = await resend.emails.send({ from: fromAddress(), to, subject, html, text, replyTo })
-    if (error) throw new Error(`[email] Resend failed: ${error.message}`)
+
+  const replyTo = process.env.EMAIL_REPLY_TO ? { email: process.env.EMAIL_REPLY_TO } : undefined
+  const res = await fetch(BREVO_URL, {
+    method: 'POST',
+    headers: { 'api-key': env.brevoApiKey, 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({ sender, to: [{ email: to }], subject, htmlContent: html, textContent: text, replyTo }),
+  })
+  if (res.ok) return
+
+  const message = await brevoMessage(res)
+  // Locally, still let you finish a sign-up when Brevo refuses (bad key, unverified sender)
+  if (!env.isProd) {
+    console.warn(`[email] Brevo refused (${res.status} ${message}) — printing instead (dev only)`)
+    printEmail({ to, subject, text })
     return
   }
-  if (provider === 'smtp') {
-    await smtp.sendMail({ from: fromAddress(), to, subject, html, text, replyTo })
-    return
-  }
-  throw new Error(`[email] Unknown EMAIL_PROVIDER "${provider}" (use resend, smtp or console)`)
+  throw new Error(`[email] Brevo failed (${res.status}): ${message}`)
 }
 
 // ---------------------------------------------------------------- templates

@@ -13,10 +13,10 @@ import {
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin)
 
-// The clips were generated at 24fps; playing them at 30 (1.25×) keeps the motion natural
-// while getting the visitor through the three scenes a little sooner (240 frames ≈ 8s).
-const PLAYBACK_FPS = 30
-const HANDOFF_SECONDS = 1.1 // gliding the next section into place after the last frame
+// The clips were generated at 24fps; playing them at 36 (1.5×) still reads as natural
+// motion while keeping the opening film short (240 frames ≈ 6.7s per scene).
+const PLAYBACK_FPS = 36
+const HANDOFF_SECONDS = 0.9 // gliding the next section into place after the last frame
 
 /**
  * Pins a section and scrubs a pre-extracted frame sequence on <canvas>

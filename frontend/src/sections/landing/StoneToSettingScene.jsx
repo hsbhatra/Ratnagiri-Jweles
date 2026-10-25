@@ -1,18 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import gsap from 'gsap'
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 import useReducedMotion from '../../lib/useReducedMotion'
+
+gsap.registerPlugin(ScrollToPlugin)
 
 /**
  * "Stone to Setting": three short clips (loose stone → finished silver piece) that play
  * one after another on their own once the chapter is on screen — no scroll-scrubbing.
  * Each stone's caption reveals when its piece is complete; the closing link reveals
- * after the last one. Pauses off-screen, has a pause button (WCAG 2.2.2), and shows
- * the finished pieces as stills for reduced-motion users or if autoplay is blocked.
+ * after the last one. "Next" jumps to the following stone; on the last stone "Skip" (or
+ * the clip ending) carries the visitor on to the next section. Pauses off-screen, has a
+ * pause button (WCAG 2.2.2), and shows the finished pieces as stills for reduced-motion
+ * users or if autoplay is blocked.
  */
 const STONES = [
-  { id: 'yellow', label: 'Yellow stone', piece: 'Ring', link: 'See rings', href: '/collections/rings', dot: '#e0a43a' },
-  { id: 'blue', label: 'Blue stone', piece: 'Pendant', link: 'See necklaces', href: '/collections/necklaces', dot: '#4aa3d8' },
-  { id: 'green', label: 'Green stone', piece: 'Ring', link: 'See rings', href: '/collections/rings', dot: '#3fa36b' },
+  { id: 'yellow', label: 'Citrine', piece: 'Ring', link: 'See rings', href: '/collections/rings', dot: '#e0a43a' },
+  { id: 'blue', label: 'London Blue Topaz', piece: 'Pendant', link: 'See necklaces', href: '/collections/necklaces', dot: '#2f7fa8' },
+  { id: 'green', label: 'Emerald', piece: 'Ring', link: 'See rings', href: '/collections/rings', dot: '#3fa36b' },
 ]
+const PLAYBACK_RATE = 1.25 // a touch quicker than generated, to keep the chapter brisk
+const LAST = STONES.length - 1
 // Pick the smaller WebM where supported (most browsers), MP4 for Safari/iOS
 const EXT =
   typeof document !== 'undefined' && document.createElement('video').canPlayType('video/webm; codecs="vp9"')
@@ -32,7 +40,6 @@ export default function StoneToSettingScene() {
   const [progress, setProgress] = useState(0)
 
   const stillMode = reducedMotion || autoplayBlocked
-  const allDone = done.every(Boolean)
 
   useEffect(() => {
     const el = sectionRef.current
@@ -53,6 +60,7 @@ export default function StoneToSettingScene() {
     videoRefs.current.forEach((v, i) => {
       if (!v) return
       if (i === active && inView && !paused) {
+        v.playbackRate = PLAYBACK_RATE
         v.play().catch(() => setAutoplayBlocked(true))
       } else {
         v.pause()
@@ -60,21 +68,64 @@ export default function StoneToSettingScene() {
     })
   }, [active, inView, paused, near, stillMode])
 
+  /** Glide the section after this one into place. */
+  const moveOn = useCallback(() => {
+    const next = sectionRef.current?.nextElementSibling
+    if (!next) return
+    // CSS smooth scrolling would fight the tween (and make autoKill think the visitor scrolled)
+    const html = document.documentElement
+    html.style.scrollBehavior = 'auto'
+    const restore = () => (html.style.scrollBehavior = '')
+    gsap.to(window, {
+      scrollTo: { y: next, autoKill: true },
+      duration: 1.1,
+      ease: 'power2.inOut',
+      onComplete: restore,
+      onInterrupt: restore,
+    })
+  }, [])
+
+  const goTo = useCallback((i) => {
+    setProgress(0)
+    setActive(i)
+    const v = videoRefs.current[i]
+    if (v) v.currentTime = 0
+  }, [])
+
+  const markDone = (i) => setDone((d) => d.map((x, j) => (j === i ? true : x)))
+
+  // Latest values for the delayed hand-off below
+  const inViewRef = useRef(inView)
+  const activeRef = useRef(active)
+  useEffect(() => {
+    inViewRef.current = inView
+    activeRef.current = active
+  }, [inView, active])
+
   const onEnded = useCallback(
     (i) => {
-      setDone((d) => d.map((x, j) => (j === i ? true : x)))
-      if (i < STONES.length - 1) {
-        // Brief hold on the finished piece before the next stone appears
-        setTimeout(() => {
-          setProgress(0)
-          setActive((a) => (a === i ? i + 1 : a))
-          const next = videoRefs.current[i + 1]
-          if (next) next.currentTime = 0
-        }, 900)
-      }
+      markDone(i)
+      // Brief hold on the finished piece (and its caption) before moving on — unless the
+      // visitor already picked another stone in the meantime
+      setTimeout(() => {
+        if (activeRef.current !== i) return
+        if (i < LAST) goTo(i + 1)
+        else if (inViewRef.current) moveOn()
+      }, 900)
     },
-    []
+    [goTo, moveOn]
   )
+
+  /** "Next" on stones 1-2, "Skip" on the last one. */
+  function advance() {
+    markDone(active)
+    setPaused(false)
+    if (active < LAST) goTo(active + 1)
+    else {
+      videoRefs.current[active]?.pause()
+      moveOn()
+    }
+  }
 
   function choose(i) {
     setProgress(0)
@@ -189,14 +240,17 @@ export default function StoneToSettingScene() {
               </span>
             ))}
           </div>
-          {allDone && (
-            <a
-              href="/collections"
-              className="hidden shrink-0 rounded-full bg-brand-linen-100 px-6 py-3 text-sm font-medium text-brand-forest-950 transition-colors hover:bg-brand-gold-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold-400 md:inline-block"
-            >
-              Explore the collection
-            </a>
-          )}
+          <button
+            type="button"
+            onClick={advance}
+            aria-label={active < LAST ? `Next stone: ${STONES[active + 1].label}` : 'Skip to the next section'}
+            className="flex h-11 shrink-0 items-center gap-2 rounded-full border border-brand-linen-100/40 px-5 text-sm font-medium hover:border-brand-linen-100 focus-visible:outline-2 focus-visible:outline-brand-gold-400"
+          >
+            {active < LAST ? 'Next' : 'Skip'}
+            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
       )}
     </section>

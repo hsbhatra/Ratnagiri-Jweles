@@ -28,9 +28,9 @@ services:
         sync: false # same value as API_SIGNATURE_TOKEN on Netlify
       - key: UPSTASH_REDIS_URL
         sync: false
-      - key: RESEND_API_KEY
+      - key: BREVO_API_KEY
         sync: false
       - key: EMAIL_FROM
-        value: RatnaGiri Jewels <onboarding@resend.dev>
+        sync: false # RatnaGiri Jewels <sender-verified-in-brevo@...>
       - key: EMAIL_REPLY_TO
         sync: false

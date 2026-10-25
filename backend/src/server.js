@@ -19,7 +19,7 @@ async function start() {
       .then(({ provider, from }) =>
         console.log(`[email] provider: ${provider}${provider === 'console' ? ' (codes print here)' : ` — from ${from}`}`)
       )
-      .catch((err) => console.error(`[email] ${err.message} — check SMTP_USER / SMTP_PASS`))
+      .catch((err) => console.error(`[email] ${err.message} — check BREVO_API_KEY`))
 
     app.listen(env.port, () => {
       console.log(`[server] RatnaGiri Jewels API listening on :${env.port} (${env.nodeEnv})`)
