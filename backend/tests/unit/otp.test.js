@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { sentEmails } from '../../src/services/email.service.js'
-import { issueOtp, verifyOtp } from '../../src/services/otp.service.js'
+import { OTP_DAILY_MAX, issueOtp, verifyOtp } from '../../src/services/otp.service.js'
 import { otpStore } from '../../src/services/otpStore.js'
 
 const target = 'asha@example.com'
@@ -95,7 +95,7 @@ describe('OTP abuse resistance', () => {
   })
 
   it('caps codes per address per day', async () => {
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < OTP_DAILY_MAX; i++) {
       await issueOtp({ target, purpose: 'registration' })
       vi.advanceTimersByTime(61 * 1000)
     }

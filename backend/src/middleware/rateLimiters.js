@@ -46,7 +46,7 @@ const otpSendBurstLimiter = make({
 // (Brevo free: 300/day) and block sign-ups for everyone else.
 const otpSendDailyLimiter = make({
   windowMin: 24 * 60,
-  limit: 50,
+  limit: 75,
   message: 'Too many code requests today. Please try again tomorrow.',
 })
 export const otpSendLimiter = [otpSendBurstLimiter, otpSendDailyLimiter]

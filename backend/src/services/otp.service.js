@@ -18,7 +18,7 @@ const dailyKey = (target) => `otp-day:${target}`
 
 // Abuse cap: at most this many codes per email address per 24h (all purposes together).
 // Stops anyone using sign-up/reset to flood one inbox or burn the daily email quota.
-export const OTP_DAILY_MAX = 10
+export const OTP_DAILY_MAX = 20
 
 const hashCode = (code) => crypto.createHmac('sha256', env.otpHashSecret).update(code).digest('hex')
 

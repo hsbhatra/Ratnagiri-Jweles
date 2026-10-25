@@ -85,6 +85,8 @@ class RedisStore {
 }
 
 function createStore() {
+  // Tests always use memory, even if backend/.env has a real Redis URL — never touch real data
+  if (env.isTest) return new MemoryStore()
   if (env.redisUrl) return new RedisStore(env.redisUrl)
   if (env.isProd) throw new Error('[otp] UPSTASH_REDIS_URL is required in production')
   if (!env.isTest) console.warn('[otp] UPSTASH_REDIS_URL not set — using in-memory OTP store (dev only)')
