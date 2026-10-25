@@ -11,6 +11,13 @@ const NO_REFRESH = ['/v1/auth/login', '/v1/auth/register', '/v1/auth/verify-emai
 
 let refreshing = null // single-flight: parallel 401s share one refresh call
 
+// Called when a signed-in session turns out to be over (signed out elsewhere, password
+// changed on another device, revoked...). The store registers it; see store/index.js.
+let onSessionEnded = () => {}
+export function setSessionEndedHandler(fn) {
+  onSessionEnded = fn
+}
+
 apiClient.interceptors.response.use(
   (res) => res.data,
   async (err) => {
@@ -28,7 +35,8 @@ apiClient.interceptors.response.use(
         await refreshing
         return apiClient(original)
       } catch {
-        // fall through to the original 401
+        onSessionEnded()
+        // and fall through to the original 401
       }
     }
 

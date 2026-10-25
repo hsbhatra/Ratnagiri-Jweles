@@ -83,7 +83,7 @@ describe.skipIf(!db)('auth (integration)', () => {
 
     it('rejects registering an already-active email', async () => {
       await registerAndVerify(device())
-      const res = await device().post('/api/v1/auth/register').send({ name: 'X', email: 'ASHA@example.com', phone: '+919876543210', password: PASSWORD })
+      const res = await device().post('/api/v1/auth/register').send({ name: 'Xavier', email: 'ASHA@example.com', phone: '+919876543210', password: PASSWORD })
       expect(res.status).toBe(409)
       expect(res.body.error.code).toBe('EMAIL_TAKEN')
     })
@@ -314,6 +314,36 @@ describe.skipIf(!db)('auth (integration)', () => {
       await registerAndVerify(dev)
       const res = await dev.delete(`/api/v1/users/me/addresses/${new mongoose.Types.ObjectId()}`)
       expect(res.status).toBe(404)
+    })
+  })
+  describe('change password & delete account', () => {
+    it('changes the password with the current one and signs out other devices only', async () => {
+      const laptop = device()
+      await registerAndVerify(laptop)
+      const phone = device(UA.phone)
+      await phone.post('/api/v1/auth/login').send({ email: 'asha@example.com', password: PASSWORD })
+
+      let res = await laptop.post('/api/v1/auth/change-password').send({ currentPassword: 'Wrong1234', newPassword: 'NewPass123' })
+      expect(res.status).toBe(400)
+      res = await laptop.post('/api/v1/auth/change-password').send({ currentPassword: PASSWORD, newPassword: PASSWORD })
+      expect(res.status).toBe(422)
+      res = await laptop.post('/api/v1/auth/change-password').send({ currentPassword: PASSWORD, newPassword: 'NewPass123' })
+      expect(res.status).toBe(200)
+
+      expect((await laptop.get('/api/v1/auth/me')).status).toBe(200)
+      expect((await phone.get('/api/v1/auth/me')).status).toBe(401)
+      expect((await device().post('/api/v1/auth/login').send({ email: 'asha@example.com', password: PASSWORD })).status).toBe(401)
+    })
+
+    it('deletes the account only with the right password, and the email can register again', async () => {
+      const dev = device()
+      await registerAndVerify(dev)
+      expect((await dev.delete('/api/v1/users/me').send({ password: 'Wrong1234' })).status).toBe(400)
+      expect((await dev.delete('/api/v1/users/me').send({ password: PASSWORD })).status).toBe(200)
+      expect((await dev.get('/api/v1/auth/me')).status).toBe(401)
+      expect((await device().post('/api/v1/auth/login').send({ email: 'asha@example.com', password: PASSWORD })).status).toBe(401)
+      const again = await device().post('/api/v1/auth/register').send({ name: 'Asha', email: 'asha@example.com', phone: '+919876543210', password: PASSWORD })
+      expect(again.body.error?.code).not.toBe('EMAIL_TAKEN') // 201, or 429 if still inside the 60s resend cooldown
     })
   })
 })

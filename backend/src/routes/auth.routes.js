@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import * as ctrl from '../controllers/auth.controller.js'
 import { authenticate } from '../middleware/auth.js'
-import { loginLimiter, otpSendLimiter, otpVerifyLimiter } from '../middleware/rateLimiters.js'
+import { loginLimiter, otpSendLimiter, otpVerifyLimiter, passwordCheckLimiter } from '../middleware/rateLimiters.js'
 import validate from '../middleware/validate.js'
 import * as v from '../validators/auth.validators.js'
 
@@ -22,5 +22,6 @@ router.post('/logout', authenticate, ctrl.logout)
 router.post('/logout-all', authenticate, ctrl.logoutAll)
 router.get('/sessions', authenticate, ctrl.listSessions)
 router.delete('/sessions/:id', authenticate, v.sessionIdParam, validate, ctrl.revokeSession)
+router.post('/change-password', authenticate, passwordCheckLimiter, v.changePasswordRules, validate, ctrl.changePassword)
 
 export default router

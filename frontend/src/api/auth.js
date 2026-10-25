@@ -14,10 +14,12 @@ export const authApi = {
   revokeSession: (id) => data(apiClient.delete(`/v1/auth/sessions/${id}`)),
   forgotPassword: (body) => data(apiClient.post('/v1/auth/forgot-password', body)),
   resetPassword: (body) => data(apiClient.post('/v1/auth/reset-password', body)),
+  changePassword: (body) => data(apiClient.post('/v1/auth/change-password', body)),
 }
 
 export const userApi = {
   updateProfile: (body) => data(apiClient.patch('/v1/users/me', body)),
+  deleteAccount: (password) => data(apiClient.delete('/v1/users/me', { data: { password } })),
   addAddress: (body) => data(apiClient.post('/v1/users/me/addresses', body)),
   updateAddress: (id, body) => data(apiClient.put(`/v1/users/me/addresses/${id}`, body)),
   deleteAddress: (id) => data(apiClient.delete(`/v1/users/me/addresses/${id}`)),

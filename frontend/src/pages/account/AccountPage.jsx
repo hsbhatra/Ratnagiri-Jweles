@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { authApi, userApi } from '../../api/auth'
 import logo from '../../assets/media/img/logo.webp'
 import Button, { FormMessage } from '../../components/ui/Button'
-import Field, { inputClass } from '../../components/ui/Field'
+import Field, { PasswordField, inputClass } from '../../components/ui/Field'
 import { readError } from '../../lib/authHelpers'
 import { formatWhen } from '../../lib/formatWhen'
 import { logout, selectAuth, userUpdated, welcomeShown } from '../../store/authSlice'
@@ -41,7 +41,15 @@ function ProfileForm({ user }) {
     setLoading(true)
     setError(null)
     try {
-      const { user: next } = await userApi.updateProfile({ ...form, preferredCurrency: form.preferredCurrency || null })
+      // Send only what changed, so an old value saved in a stricter format later can't block other edits
+      const original = { name: user.name, phone: user.phone || '', preferredCurrency: user.preferredCurrency || '' }
+      const changes = Object.fromEntries(Object.entries(form).filter(([k, v]) => v !== original[k]))
+      if (!Object.keys(changes).length) {
+        setSaved(true)
+        return
+      }
+      if ('preferredCurrency' in changes) changes.preferredCurrency = changes.preferredCurrency || null
+      const { user: next } = await userApi.updateProfile(changes)
       dispatch(userUpdated(next))
       setSaved(true)
     } catch (err) {
@@ -56,7 +64,16 @@ function ProfileForm({ user }) {
     <form onSubmit={onSubmit} noValidate className="space-y-5">
       <Field label="Full name" autoComplete="name" value={form.name} onChange={update('name')} error={fields.name} />
       <Field label="Email" value={user.email} readOnly disabled hint="Your email is your sign-in and can't be changed here." />
-      <Field label="Phone number" type="tel" autoComplete="tel" value={form.phone} onChange={update('phone')} error={fields.phone} />
+      <Field
+        label="Phone number"
+        type="tel"
+        autoComplete="tel"
+        placeholder="+91 98765 43210"
+        value={form.phone}
+        onChange={update('phone')}
+        error={fields.phone}
+        hint="Include your country code. Used by the courier for delivery."
+      />
       <Field label="Currency" error={fields.preferredCurrency} hint="Prices are shown in this currency.">
         {({ id, describedBy }) => (
           <select id={id} aria-describedby={describedBy} value={form.preferredCurrency} onChange={update('preferredCurrency')} className={inputClass}>
@@ -154,6 +171,123 @@ function Devices() {
   )
 }
 
+function ChangePassword() {
+  const empty = { currentPassword: '', newPassword: '' }
+  const [form, setForm] = useState(empty)
+  const [error, setError] = useState(null)
+  const [done, setDone] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const update = (key) => (e) => {
+    setDone(false)
+    setForm((f) => ({ ...f, [key]: e.target.value }))
+  }
+
+  async function onSubmit(e) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    try {
+      await authApi.changePassword(form)
+      setForm(empty)
+      setDone(true)
+    } catch (err) {
+      setError(readError(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fields = error?.fields || {}
+  return (
+    <form onSubmit={onSubmit} noValidate className="space-y-5">
+      <PasswordField label="Current password" autoComplete="current-password" value={form.currentPassword} onChange={update('currentPassword')} error={fields.currentPassword} />
+      <PasswordField
+        label="New password"
+        autoComplete="new-password"
+        value={form.newPassword}
+        onChange={update('newPassword')}
+        error={fields.newPassword}
+        hint="At least 8 characters, with a letter and a number."
+      />
+      {error && !Object.keys(fields).length && <FormMessage>{error.message}</FormMessage>}
+      <div className="flex flex-wrap items-center gap-4">
+        <Button type="submit" loading={loading}>
+          Change password
+        </Button>
+        {done && (
+          <p role="status" className="text-sm text-brand-forest-800">
+            Password changed. Your other devices have been signed out.
+          </p>
+        )}
+      </div>
+    </form>
+  )
+}
+
+/** Two-step, in-page confirmation (no browser confirm dialog) with the password re-checked server-side. */
+function DeleteAccount() {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  async function onSubmit(e) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    try {
+      await userApi.deleteAccount(password)
+      await dispatch(logout())
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(readError(err))
+      setLoading(false)
+    }
+  }
+
+  if (!open) {
+    return (
+      <Button variant="danger" onClick={() => setOpen(true)}>
+        Delete my account
+      </Button>
+    )
+  }
+
+  return (
+    <form onSubmit={onSubmit} noValidate className="space-y-5 rounded-[14px] border border-red-800/25 bg-red-50/60 p-5">
+      <p className="text-[15px] leading-relaxed text-brand-forest-950">
+        This permanently deletes your account, saved addresses and signed-in devices. It can’t be undone.
+      </p>
+      <PasswordField
+        label="Enter your password to confirm"
+        autoComplete="current-password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        error={error?.fields?.password}
+      />
+      {error && !error.fields?.password && <FormMessage>{error.message}</FormMessage>}
+      <div className="flex flex-wrap gap-3">
+        <Button type="submit" variant="danger" loading={loading} disabled={!password}>
+          Permanently delete account
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setOpen(false)
+            setPassword('')
+            setError(null)
+          }}
+        >
+          Keep my account
+        </Button>
+      </div>
+    </form>
+  )
+}
+
 export default function AccountPage() {
   const { user, justRegistered } = useSelector(selectAuth)
   const dispatch = useDispatch()
@@ -211,6 +345,12 @@ export default function AccountPage() {
             </Section>
             <Section title="Signed-in devices" description="You can be signed in on two devices at a time. Sign out of any you don’t recognise.">
               <Devices />
+            </Section>
+            <Section title="Password" description="Changing it signs you out everywhere except this device.">
+              <ChangePassword />
+            </Section>
+            <Section title="Delete account" description="Remove your account and personal details from RatnaGiri Jewels.">
+              <DeleteAccount />
             </Section>
           </div>
         </main>

@@ -26,17 +26,23 @@ class MemoryStore {
   async set(key, value, ttlSec) {
     this.map.set(key, { value, expiresAt: Date.now() + ttlSec * 1000 })
   }
-  /** Replace value but keep the existing expiry (Redis SET ... KEEPTTL). */
-  async setKeepTtl(key, value) {
-    const hit = this._live(key)
-    if (hit) hit.value = value
-  }
   async ttl(key) {
     const hit = this._live(key)
     return hit ? Math.ceil((hit.expiresAt - Date.now()) / 1000) : -2
   }
+  /** Atomic counter; the TTL starts with the first increment. */
+  async incr(key, ttlSec) {
+    const hit = this._live(key)
+    if (hit) {
+      hit.value = String(Number(hit.value) + 1)
+      return Number(hit.value)
+    }
+    this.map.set(key, { value: '1', expiresAt: Date.now() + ttlSec * 1000 })
+    return 1
+  }
+  /** Returns how many keys were removed (1 or 0), like Redis DEL. */
   async del(key) {
-    this.map.delete(key)
+    return this._live(key) ? Number(this.map.delete(key)) : 0
   }
   async clear() {
     this.map.clear()
@@ -65,11 +71,13 @@ class RedisStore {
   set(key, value, ttlSec) {
     return this.client.set(key, value, 'EX', ttlSec)
   }
-  setKeepTtl(key, value) {
-    return this.client.set(key, value, 'KEEPTTL', 'XX')
-  }
   ttl(key) {
     return this.client.ttl(key)
+  }
+  async incr(key, ttlSec) {
+    const n = await this.client.incr(key)
+    if (n === 1) await this.client.expire(key, ttlSec)
+    return n
   }
   del(key) {
     return this.client.del(key)

@@ -14,7 +14,7 @@ const sessionSchema = new mongoose.Schema({
   revokedAt: { type: Date, default: null },
   revokedReason: {
     type: String,
-    enum: [null, 'logout', 'logout_all', 'user_revoked', 'password_reset', 'token_reuse', 'session_limit_race'],
+    enum: [null, 'logout', 'logout_all', 'user_revoked', 'password_reset', 'token_reuse', 'session_limit_race', 'password_change', 'account_deleted'],
     default: null,
   },
   createdAt: { type: Date, default: Date.now },

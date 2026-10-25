@@ -4,7 +4,8 @@ import { env } from '../config/env.js'
 import User from '../models/User.js'
 import AppError from '../utils/AppError.js'
 import { issueOtp, verifyOtp } from './otp.service.js'
-import { createSession, revokeAllUserSessions, revokeUserSession } from './session.service.js'
+import Session from '../models/Session.js'
+import { createSession, revokeAllUserSessions, revokeSessions, revokeUserSession } from './session.service.js'
 
 // Used to keep "unknown email" and "wrong password" equally slow (no user enumeration by timing).
 const DUMMY_HASH = bcrypt.hashSync('timing-equaliser-not-a-real-password', env.bcryptCost)
@@ -31,7 +32,7 @@ function assertRegistrationToken(user, token) {
   if (!ok) {
     throw new AppError(
       400,
-      'This verification link has expired. Please register again to get a new code.',
+      'This sign-up has expired. Please register again to get a new code.',
       'REGISTRATION_EXPIRED'
     )
   }
@@ -131,7 +132,7 @@ export async function forgotPassword({ email }) {
     } catch (err) {
       // A cooldown only exists for real accounts, so answering differently would leak
       // that the email is registered. The previous code is still valid anyway.
-      if (err.code !== 'OTP_COOLDOWN') throw err
+      if (err.code !== 'OTP_COOLDOWN' && err.code !== 'OTP_DAILY_LIMIT') throw err
     }
   }
   return { email, expiresInSec: env.otpTtlSec, resendAfterSec: env.otpResendCooldownSec }
@@ -149,4 +150,40 @@ export async function resetPassword({ email, code, newPassword }) {
   user.passwordChangedAt = new Date()
   await user.save()
   await revokeAllUserSessions(user._id, 'password_reset')
+}
+
+async function assertPassword(userId, password) {
+  const user = await User.findById(userId).select('+passwordHash')
+  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+    throw new AppError(400, 'Your current password is incorrect.', 'WRONG_PASSWORD', {
+      fields: { currentPassword: 'Your current password is incorrect.', password: 'Your password is incorrect.' },
+    })
+  }
+  return user
+}
+
+/** Signed-in password change: re-checks the current password, then signs out every *other* device. */
+export async function changePassword({ userId, currentSessionId, currentPassword, newPassword }) {
+  const user = await assertPassword(userId, currentPassword)
+  if (await bcrypt.compare(newPassword, user.passwordHash)) {
+    throw new AppError(422, 'Choose a password you are not already using.', 'VALIDATION_ERROR', {
+      fields: { newPassword: 'Choose a password you are not already using.' },
+    })
+  }
+  user.passwordHash = await bcrypt.hash(newPassword, env.bcryptCost)
+  user.passwordChangedAt = new Date()
+  await user.save()
+  await revokeSessions({ userId: user._id, _id: { $ne: currentSessionId } }, 'password_change')
+}
+
+/**
+ * Right to erasure (international customers / GDPR): deletes the account and its sessions
+ * after re-checking the password. Orders, once they exist, will be kept anonymised for
+ * accounting rather than deleted.
+ */
+export async function deleteAccount({ userId, password }) {
+  const user = await assertPassword(userId, password)
+  await revokeAllUserSessions(user._id, 'account_deleted')
+  await Session.deleteMany({ userId: user._id })
+  await User.deleteOne({ _id: user._id })
 }

@@ -14,10 +14,12 @@ function Waiting() {
 
 /** Signed-in only. The backend still checks every request; this just routes the UI. */
 export function RequireAuth() {
-  const { status } = useSelector(selectAuth)
+  const { status, sessionEnded } = useSelector(selectAuth)
   const location = useLocation()
   if (status === 'unknown') return <Waiting />
-  if (status !== 'authenticated') return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  if (status !== 'authenticated') {
+    return <Navigate to="/login" replace state={{ from: location.pathname, sessionEnded }} />
+  }
   return <Outlet />
 }
 

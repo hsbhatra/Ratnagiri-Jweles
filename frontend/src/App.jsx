@@ -13,6 +13,7 @@ const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'))
 const VerifyEmailPage = lazy(() => import('./pages/auth/VerifyEmailPage'))
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'))
 const AccountPage = lazy(() => import('./pages/account/AccountPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 function Bootstrap({ children }) {
   const dispatch = useDispatch()
@@ -40,6 +41,7 @@ export default function App() {
               <Route element={<RequireAuth />}>
                 <Route path="/account" element={<AccountPage />} />
               </Route>
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
             </Suspense>
           </Bootstrap>

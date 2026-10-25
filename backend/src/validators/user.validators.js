@@ -1,16 +1,9 @@
 import { body, param } from 'express-validator'
 import { SUPPORTED_CURRENCIES } from '../models/User.js'
-
-const phone = (field, optional = false) => {
-  const chain = body(field)
-  return (optional ? chain.optional() : chain)
-    .isString().withMessage('Phone number is required')
-    .customSanitizer((v) => String(v).replace(/[\s()-]/g, ''))
-    .matches(/^\+?[1-9]\d{7,14}$/).withMessage('Enter a valid phone number with country code')
-}
+import { nameRule, phoneRule as phone } from './auth.validators.js'
 
 export const updateProfileRules = [
-  body('name').optional().isString().trim().isLength({ min: 2, max: 100 }).withMessage('Name must be 2–100 characters'),
+  nameRule(true),
   phone('phone', true),
   body('preferredCurrency')
     .optional({ values: 'null' })
@@ -24,6 +17,8 @@ const str = (field, max, required = true) => {
     .trim()
     .notEmpty().withMessage('Required')
     .isLength({ max }).withMessage(`Max ${max} characters`)
+    // Addresses are printed on invoices and labels later; markup has no business in them
+    .not().matches(/[<>]/).withMessage('Remove the < and > characters')
 }
 
 export const addressRules = [

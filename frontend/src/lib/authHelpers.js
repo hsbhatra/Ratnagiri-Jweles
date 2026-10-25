@@ -38,5 +38,5 @@ export const pendingRegistration = {
 
 /** Only allow same-site relative redirects after sign-in (no open redirects). */
 export function safeRedirect(path) {
-  return typeof path === 'string' && path.startsWith('/') && !path.startsWith('//') ? path : '/account'
+  return typeof path === 'string' && path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') ? path : '/account'
 }

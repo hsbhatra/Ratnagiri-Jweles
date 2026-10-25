@@ -85,3 +85,8 @@ export async function resetPassword(req, res) {
   clearAuthCookies(res)
   sendSuccess(res, { reset: true })
 }
+
+export async function changePassword(req, res) {
+  await auth.changePassword({ ...matchedData(req), userId: req.user._id, currentSessionId: req.authSession._id })
+  sendSuccess(res, { changed: true })
+}

@@ -21,11 +21,19 @@ export const logout = createAsyncThunk('auth/logout', async ({ everywhere = fals
 const authSlice = createSlice({
   name: 'auth',
   // justRegistered lets the account page greet a brand-new customer
-  initialState: { user: null, status: 'unknown', justRegistered: false }, // status: unknown → authenticated | anonymous
+  // sessionEnded: the session was ended elsewhere while this tab was signed in
+  initialState: { user: null, status: 'unknown', justRegistered: false, sessionEnded: false }, // status: unknown → authenticated | anonymous
   reducers: {
     signedIn(state, action) {
       state.user = action.payload
       state.status = 'authenticated'
+      state.sessionEnded = false
+    },
+    sessionEnded(state) {
+      state.user = null
+      state.status = 'anonymous'
+      state.justRegistered = false
+      state.sessionEnded = true
     },
     registered(state, action) {
       state.user = action.payload
@@ -49,10 +57,11 @@ const authSlice = createSlice({
         state.user = null
         state.status = 'anonymous'
         state.justRegistered = false
+        state.sessionEnded = false
       })
   },
 })
 
-export const { signedIn, registered, welcomeShown, userUpdated } = authSlice.actions
+export const { signedIn, sessionEnded, registered, welcomeShown, userUpdated } = authSlice.actions
 export const selectAuth = (state) => state.auth
 export default authSlice.reducer

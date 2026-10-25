@@ -13,7 +13,7 @@ import { signedIn } from '../../store/authSlice'
 export default function LoginPage() {
   const dispatch = useDispatch()
   const { state } = useLocation()
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [form, setForm] = useState({ email: typeof state?.email === 'string' ? state.email : '', password: '' })
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const [sessions, setSessions] = useState(null) // set when the 2-device limit is hit
@@ -63,7 +63,7 @@ export default function LoginPage() {
             <li key={s.id} className="flex items-center justify-between gap-4 py-4">
               <div className="min-w-0">
                 <p className="font-medium text-brand-forest-950">{s.deviceLabel}</p>
-                <p className="text-[13px] text-brand-forest-900/65">Last active {formatWhen(s.lastUsedAt)}</p>
+                <p className="text-[13px] text-brand-forest-900/65">Signed in {formatWhen(s.createdAt)}, last active {formatWhen(s.lastUsedAt)}</p>
               </div>
               <Button
                 variant="outline"
@@ -106,6 +106,9 @@ export default function LoginPage() {
     >
       <form onSubmit={onSubmit} noValidate className="space-y-5">
         {state?.reset && <FormMessage tone="info">Password updated. Sign in with your new password.</FormMessage>}
+        {state?.sessionEnded && !state?.reset && (
+          <FormMessage tone="info">You were signed out on this device. Please sign in again to continue.</FormMessage>
+        )}
         {error && !Object.keys(fields).length && (
           <FormMessage>
             {error.message}

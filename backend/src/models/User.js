@@ -45,6 +45,13 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
+// Abandoned sign-ups (never verified) are removed by MongoDB after 7 days. Verified
+// accounts no longer match the filter, so the index never touches them.
+userSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 7 * 24 * 60 * 60, partialFilterExpression: { status: 'pending_verification' } }
+)
+
 userSchema.set('toJSON', {
   transform: (doc, ret) => {
     ret.id = ret._id.toString()

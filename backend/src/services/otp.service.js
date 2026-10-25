@@ -12,7 +12,13 @@ import { sendOtpEmail } from './email.service.js'
 export const OTP_PURPOSES = ['registration', 'password_reset']
 
 const codeKey = (purpose, target) => `otp:${purpose}:${target}`
+const attemptsKey = (purpose, target) => `otp-att:${purpose}:${target}`
 const cooldownKey = (purpose, target) => `otp-cd:${purpose}:${target}`
+const dailyKey = (target) => `otp-day:${target}`
+
+// Abuse cap: at most this many codes per email address per 24h (all purposes together).
+// Stops anyone using sign-up/reset to flood one inbox or burn the daily email quota.
+export const OTP_DAILY_MAX = 10
 
 const hashCode = (code) => crypto.createHmac('sha256', env.otpHashSecret).update(code).digest('hex')
 
@@ -31,13 +37,15 @@ export async function issueOtp({ target, purpose, name }) {
     )
   }
 
+  const sentToday = await otpStore.incr(dailyKey(target), 24 * 60 * 60)
+  if (sentToday > OTP_DAILY_MAX) {
+    throw new AppError(429, "You've asked for too many codes today. Please try again tomorrow.", 'OTP_DAILY_LIMIT')
+  }
+
   const code = generateCode()
   // A new code always replaces the previous one and resets the attempt counter.
-  await otpStore.set(
-    codeKey(purpose, target),
-    JSON.stringify({ codeHash: hashCode(code), attempts: 0 }),
-    env.otpTtlSec
-  )
+  await otpStore.set(codeKey(purpose, target), JSON.stringify({ codeHash: hashCode(code) }), env.otpTtlSec)
+  await otpStore.del(attemptsKey(purpose, target))
   await otpStore.set(cooldownKey(purpose, target), '1', env.otpResendCooldownSec)
 
   try {
@@ -61,28 +69,34 @@ export async function verifyOtp({ target, purpose, code }) {
   }
 
   const record = JSON.parse(raw)
-  if (record.attempts >= env.otpMaxAttempts) {
+  const lock = async () => {
     await otpStore.del(key)
-    throw new AppError(429, 'Too many wrong attempts. Please request a new code.', 'OTP_LOCKED')
+    await otpStore.del(attemptsKey(purpose, target))
+    return new AppError(429, 'Too many wrong attempts. Please request a new code.', 'OTP_LOCKED')
   }
+
+  // Count the attempt *before* comparing, atomically: parallel guesses can't share one slot
+  const attempts = await otpStore.incr(attemptsKey(purpose, target), env.otpTtlSec)
+  if (attempts > env.otpMaxAttempts) throw await lock()
 
   const expected = Buffer.from(record.codeHash, 'hex')
   const actual = Buffer.from(hashCode(String(code)), 'hex')
   const match = expected.length === actual.length && crypto.timingSafeEqual(expected, actual)
 
   if (!match) {
-    record.attempts += 1
-    const remaining = env.otpMaxAttempts - record.attempts
-    if (remaining <= 0) {
-      await otpStore.del(key)
-      throw new AppError(429, 'Too many wrong attempts. Please request a new code.', 'OTP_LOCKED')
-    }
-    await otpStore.setKeepTtl(key, JSON.stringify(record))
+    const remaining = env.otpMaxAttempts - attempts
+    if (remaining <= 0) throw await lock()
     throw new AppError(400, `That code isn't right. ${remaining} attempt(s) left.`, 'OTP_INVALID', {
       attemptsLeft: remaining,
     })
   }
 
-  await otpStore.del(key)
+  // Single use, even under parallel requests: only the request that actually deletes the
+  // code wins; the others see it as already used.
+  const consumed = await otpStore.del(key)
+  await otpStore.del(attemptsKey(purpose, target))
+  if (!consumed) {
+    throw new AppError(400, 'This code has expired or was never sent. Please request a new one.', 'OTP_EXPIRED')
+  }
   return true
 }

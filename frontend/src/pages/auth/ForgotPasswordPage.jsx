@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
     setError(null)
     try {
       await authApi.resetPassword({ email, code, newPassword })
-      navigate('/login', { replace: true, state: { reset: true } })
+      navigate('/login', { replace: true, state: { reset: true, email } })
     } catch (err) {
       const er = readError(err)
       setError(er)
