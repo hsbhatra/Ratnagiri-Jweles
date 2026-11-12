@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
       title="Choose a new password"
       intro={
         <>
-          If <strong className="font-medium text-brand-forest-950">{email}</strong> has an account, a code is on its way.
+          If <strong className="font-medium text-ink">{email}</strong> has an account, a code is on its way.
           Resetting signs you out on every device.
         </>
       }
@@ -102,7 +102,7 @@ export default function ForgotPasswordPage() {
               setError(null)
               setCode('')
             }}
-            className="font-medium text-brand-forest-800 underline decoration-brand-gold-500/70 underline-offset-4 hover:text-brand-forest-950 focus-visible:outline-2 focus-visible:outline-brand-gold-500"
+            className="font-medium text-gold underline decoration-gold/70 underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-gold"
           >
             Use a different one
           </button>
@@ -113,11 +113,11 @@ export default function ForgotPasswordPage() {
         <FormMessage>{generalError}</FormMessage>
         <FormMessage tone="info">{notice}</FormMessage>
         <div>
-          <p id={labelId} className="mb-2 text-sm font-medium text-brand-forest-900">
+          <p id={labelId} className="mb-2 text-sm font-medium text-ink">
             Code from your email
           </p>
           <OtpInput value={code} onChange={setCode} invalid={Boolean(fields.code)} labelId={labelId} />
-          {fields.code && <p className="mt-1.5 text-[13px] text-red-800">{fields.code}</p>}
+          {fields.code && <p className="mt-1.5 text-[13px] text-danger">{fields.code}</p>}
         </div>
         <PasswordField
           label="New password"
@@ -131,14 +131,14 @@ export default function ForgotPasswordPage() {
         <Button type="submit" loading={loading} disabled={code.length !== 6} className="w-full">
           Update password
         </Button>
-        <p className="text-sm text-brand-forest-900/75">
+        <p className="text-sm text-muted">
           {resendIn > 0 ? (
             `You can request a new code in ${resendIn}s.`
           ) : (
             <button
               type="button"
               onClick={() => requestCode()}
-              className="font-medium text-brand-forest-800 underline decoration-brand-gold-500/70 underline-offset-4 hover:text-brand-forest-950 focus-visible:outline-2 focus-visible:outline-brand-gold-500"
+              className="font-medium text-gold underline decoration-gold/70 underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-gold"
             >
               Send a new code
             </button>

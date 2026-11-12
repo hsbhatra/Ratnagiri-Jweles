@@ -61,8 +61,8 @@ function AddressForm({ initial, onCancel, onSaved }) {
         )}
       </Field>
       <Field label="Label (optional)" placeholder="Home, Office…" value={form.label} onChange={update('label')} error={fields.label} />
-      <label className="flex items-center gap-3 self-end pb-3 text-sm text-brand-forest-900">
-        <input type="checkbox" checked={form.isDefault} onChange={update('isDefault')} className="size-4 accent-brand-forest-900" />
+      <label className="flex items-center gap-3 self-end pb-3 text-sm text-ink">
+        <input type="checkbox" checked={form.isDefault} onChange={update('isDefault')} className="size-4 accent-action" />
         Use as my default address
       </label>
       {error && !Object.keys(fields).length && (
@@ -114,15 +114,15 @@ export default function AddressBook({ addresses }) {
     <div>
       <FormMessage>{error?.message}</FormMessage>
       {addresses.length === 0 ? (
-        <p className="text-[15px] text-brand-forest-900/75">No saved addresses yet.</p>
+        <p className="text-[15px] text-muted">No saved addresses yet.</p>
       ) : (
-        <ul className="divide-y divide-brand-forest-900/10">
+        <ul className="divide-y divide-line">
           {addresses.map((a) => (
             <li key={a._id} className="flex flex-col gap-3 py-5 first:pt-0 sm:flex-row sm:items-start sm:justify-between">
-              <address className="not-italic text-[15px] leading-relaxed text-brand-forest-900">
-                <span className="font-medium text-brand-forest-950">
+              <address className="not-italic text-[15px] leading-relaxed text-ink">
+                <span className="font-medium text-ink">
                   {a.label || a.fullName}
-                  {a.isDefault && <span className="ml-2 text-sm font-normal text-brand-forest-800">(default)</span>}
+                  {a.isDefault && <span className="ml-2 text-sm font-normal text-gold">(default)</span>}
                 </span>
                 <br />
                 {a.fullName}, {a.phone}
@@ -143,11 +143,9 @@ export default function AddressBook({ addresses }) {
           ))}
         </ul>
       )}
-      {addresses.length < 5 && (
-        <Button variant="outline" className="mt-6" onClick={() => setEditing('new')}>
-          Add an address
-        </Button>
-      )}
+      <Button variant="outline" className="mt-6" onClick={() => setEditing('new')}>
+        Add an address
+      </Button>
     </div>
   )
 }

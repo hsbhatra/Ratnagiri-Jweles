@@ -8,12 +8,13 @@ Tick on desktop Chrome **and** a real phone. Log any failure in `BUGS.md`.
 - [ ] `cd frontend && npm run lint && npm run build` — no errors
 
 ## Landing page
-- [ ] Hero shows title; one scroll plays Scene 1 → 2 → Stone to Setting by themselves
-- [ ] Skip (and Esc) leaves the whole intro and glides to Collections
-- [ ] Scrolling up inside a scene plays it backwards to its start
-- [ ] Stone to Setting: Citrine → London Blue Topaz play in turn; captions + links appear
-- [ ] "Next" moves to the next stone; "Skip" on the last stone (or it ending) moves to Collections
-- [ ] With OS "reduce motion" on: no autoplay, final frames / stills shown
+- [ ] Header shows on every shop page: Collections, Stones, Our promise, Sign in (or "Hi, name")
+- [ ] Hero film plays once in place; "Pause film" / "Replay film" work; the page never scrolls by itself
+- [ ] "Shop by stone" lists all 32 stones; a stone opens `/collections?stone=...`
+- [ ] Collection cards and "Shop the collection" open a collection page (products, or "being added")
+- [ ] A product card opens its product page: photos switch, price, details, variants and related pieces show; an unknown product says "not available"
+- [ ] Stone to Setting: Citrine → London Blue Topaz play in turn; captions + links appear; "Next" works
+- [ ] With OS "reduce motion" on: no film, stills shown
 - [ ] No horizontal scroll at 360 px width
 
 ## Auth (Module 2)
@@ -23,7 +24,7 @@ Tick on desktop Chrome **and** a real phone. Log any failure in `BUGS.md`.
 - [ ] Third device login asks which device to sign out (2-device cap); revoking a device from Account works
 - [ ] Forgot password → code → new password → old sessions signed out
 - [ ] Protected pages redirect to login and come back after sign-in
-- [ ] Address book: add, edit, delete, set default (always exactly one default; max 5)
+- [ ] Address book: add, edit, delete, set default (always exactly one default; no limit on how many)
 - [ ] Change password: wrong current → error; same as current → error; success signs out other devices only
 - [ ] Delete account: wrong password → error; success → signed out, email can register again
 - [ ] Session ended elsewhere (sign out of all devices on another device) → this tab goes to sign-in with a message

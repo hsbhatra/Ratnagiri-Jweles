@@ -1,7 +1,6 @@
 import mongoose from 'mongoose'
 
 export const SUPPORTED_CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'AUD', 'CAD', 'AED', 'SGD']
-export const MAX_ADDRESSES = 5
 
 const addressSchema = new mongoose.Schema(
   {
@@ -37,10 +36,7 @@ const userSchema = new mongoose.Schema(
     registrationTokenHash: { type: String, select: false }, // only while pending_verification
     passwordChangedAt: { type: Date, default: null },
     preferredCurrency: { type: String, enum: SUPPORTED_CURRENCIES, default: null }, // null = geo-detect
-    addresses: {
-      type: [addressSchema],
-      validate: [(v) => v.length <= MAX_ADDRESSES, `At most ${MAX_ADDRESSES} saved addresses`],
-    },
+    addresses: { type: [addressSchema], default: [] }, // no limit (owner's call, 2026-10-26)
   },
   { timestamps: true }
 )

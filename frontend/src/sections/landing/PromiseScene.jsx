@@ -2,12 +2,12 @@ import useReducedMotion from '../../lib/useReducedMotion'
 import useRevealOnScroll from '../../lib/useRevealOnScroll'
 import promiseImg from '../../assets/media/img/scene-5-the-promise.webp'
 
-// TODO: Himanshu to confirm/replace final promise copy — placeholders only,
-// honest claims no fabricated testimonials, per brand decision.
+// TODO: owner to confirm the final promise copy. Only facts we already hold are stated here
+// (silver, the 32-stone list, handmade); nothing about purity or stone origin is claimed.
 const promises = [
-  { title: 'Real materials', body: 'Solid gold and genuine stones, never plated or simulated.' },
+  { title: 'Silver and stone', body: 'Handcrafted, mainly in silver, with thirty-two kinds of stone to choose from.' },
   { title: 'Made by hand', body: 'Each piece is crafted individually, not mass-produced.' },
-  { title: 'Built to last', body: "Care guidance included with every order so it stays yours for years." },
+  { title: 'Built to last', body: 'Care guidance included with every order so it stays yours for years.' },
 ]
 
 export default function PromiseScene() {
@@ -15,28 +15,20 @@ export default function PromiseScene() {
   const sectionRef = useRevealOnScroll({ reducedMotion })
 
   return (
-    <section
-      ref={sectionRef}
-      className="grid grid-cols-1 items-center gap-10 bg-brand-forest-950 px-6 py-24 md:grid-cols-2 md:px-16"
-    >
-      <img
-        data-reveal
-        src={promiseImg}
-        alt=""
-        className="aspect-[4/5] w-full rounded-sm object-cover"
-      />
-      <div data-reveal className="max-w-md">
-        <h2 className="font-display mb-8 text-3xl text-brand-linen-100 md:text-4xl">
-          Our Promise
-        </h2>
-        <ul className="space-y-6">
-          {promises.map((p) => (
-            <li key={p.title}>
-              <p className="font-display text-lg text-brand-gold-300">{p.title}</p>
-              <p className="mt-1 text-brand-linen-200">{p.body}</p>
-            </li>
-          ))}
-        </ul>
+    <section ref={sectionRef} id="promise" className="scroll-mt-4 border-y border-gold/40 bg-raised px-5 py-24 sm:px-8">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-16">
+        <img data-reveal src={promiseImg} alt="" loading="lazy" className="aspect-[4/5] w-full border border-line object-cover" />
+        <div data-reveal>
+          <h2 className="mb-10 font-display text-4xl text-ink md:text-5xl">Our promise</h2>
+          <dl className="divide-y divide-line border-y border-line">
+            {promises.map((p) => (
+              <div key={p.title} className="grid gap-1 py-5 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)] sm:gap-6">
+                <dt className="font-display text-xl text-gold">{p.title}</dt>
+                <dd className="max-w-[44ch] text-muted">{p.body}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
       </div>
     </section>
   )

@@ -1,26 +1,65 @@
+/* Hallmark · redesign: full · direction: Jewel box (custom, by request) · brand kept: logo green + gold · hero: full-bleed film with copy on it · signature: the shop is the lining of a jewellery box, stones are the only colour */
+/* critique: one drenched green ground, gold for actions and hairlines, square corners; admin runs the same tokens in a light scope */
 @import "tailwindcss";
 
-@theme {
-  /* Brand tokens — sourced from the RatnaGiri Jewels logo (deep forest green + gold) */
-  --color-brand-forest-950: #0a2b22;
-  --color-brand-forest-900: #0e3b2e;
-  --color-brand-forest-800: #164a3a;
-  --color-brand-forest-700: #1f5c48;
+/* Jewel box: every colour and face goes through these tokens (see DESIGN.md). */
+:root {
+  --rg-ground: #0a2b22; /* the logo's green: page ground */
+  --rg-raised: #0e3b2e; /* panels, cards */
+  --rg-field: #07201a; /* inputs */
+  --rg-ink: #f1ead8;
+  --rg-muted: #a9b8ab;
+  --rg-line: #34604f;
+  --rg-action: #e8cd7f; /* gold: buttons, links, focus */
+  --rg-on-action: #0a2b22;
+  --rg-gold: #e8cd7f;
+  --rg-danger: #ffb4a8;
+  color-scheme: dark;
+}
 
-  --color-brand-gold-600: #a9801f;
-  --color-brand-gold-500: #c9a227;
-  --color-brand-gold-400: #dcb94e;
+/* Admin works on a light desk: same tokens, light values. */
+[data-theme="light"] {
+  --rg-ground: #f3f2ee;
+  --rg-raised: #fbfaf7;
+  --rg-field: #ffffff;
+  --rg-ink: #12261f;
+  --rg-muted: #55665d;
+  --rg-line: #cfd2c9;
+  --rg-action: #0e3b2e;
+  --rg-on-action: #f6f1e7;
+  --rg-gold: #7a5c10;
+  --rg-danger: #a3261e;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-ground: var(--rg-ground);
+  --color-raised: var(--rg-raised);
+  --color-field: var(--rg-field);
+  --color-ink: var(--rg-ink);
+  --color-muted: var(--rg-muted);
+  --color-line: var(--rg-line);
+  --color-action: var(--rg-action);
+  --color-on-action: var(--rg-on-action);
+  --color-gold: var(--rg-gold);
+  --color-danger: var(--rg-danger);
+}
+
+@theme {
+  /* Fixed brand colours, for surfaces that stay dark in both scopes (photo overlays, admin bar) */
+  --color-brand-forest-950: #0a2b22;
+  --color-brand-linen-100: #f1ead8;
   --color-brand-gold-300: #e8cd7f;
 
-  --color-brand-linen-100: #f6f1e7;
-  --color-brand-linen-200: #ece4d3;
-
-  --font-display: "Cormorant Garamond", "Playfair Display", serif;
-  --font-body: "Inter", system-ui, sans-serif;
+  --font-display: "Marcellus", Georgia, serif;
+  --font-body: "Hanken Grotesk", system-ui, sans-serif;
 }
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
+  font-synthesis-weight: none; /* Marcellus has one weight: never fake a bold */
+  scrollbar-color: var(--rg-line) var(--rg-ground);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -38,7 +77,14 @@ html {
 }
 
 body {
-  background-color: var(--color-brand-linen-100);
-  color: var(--color-brand-forest-950);
+  overflow-x: clip;
+  background-color: var(--rg-ground);
+  color: var(--rg-ink);
   font-family: var(--font-body);
+  caret-color: var(--rg-gold);
+}
+
+::selection {
+  background: var(--rg-gold);
+  color: var(--rg-on-action);
 }

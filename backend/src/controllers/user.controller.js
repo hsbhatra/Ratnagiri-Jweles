@@ -1,6 +1,5 @@
 import { matchedData } from 'express-validator'
 import { sendSuccess } from '../middleware/errorHandler.js'
-import { MAX_ADDRESSES } from '../models/User.js'
 import AppError from '../utils/AppError.js'
 import { deleteAccount as removeAccount } from '../services/auth.service.js'
 import { clearAuthCookies } from '../services/token.service.js'
@@ -32,9 +31,6 @@ function applyDefault(user, address) {
 
 export async function addAddress(req, res) {
   const user = req.user
-  if (user.addresses.length >= MAX_ADDRESSES) {
-    throw new AppError(400, `You can save up to ${MAX_ADDRESSES} addresses.`, 'ADDRESS_LIMIT')
-  }
   user.addresses.push(matchedData(req))
   applyDefault(user, user.addresses.at(-1))
   await user.save()

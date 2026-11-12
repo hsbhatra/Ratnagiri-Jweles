@@ -5,8 +5,8 @@ import { selectAuth } from '../../store/authSlice'
 
 function Waiting() {
   return (
-    <div className="grid min-h-dvh place-items-center bg-brand-linen-100" role="status">
-      <span className="size-6 animate-spin rounded-full border-2 border-brand-forest-900 border-r-transparent" />
+    <div className="grid min-h-dvh place-items-center bg-ground" role="status">
+      <span className="size-6 animate-spin rounded-full border-2 border-line border-r-transparent" />
       <span className="sr-only">Loading</span>
     </div>
   )

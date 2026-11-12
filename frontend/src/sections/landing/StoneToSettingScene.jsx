@@ -1,16 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import gsap from 'gsap'
-import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 import useReducedMotion from '../../lib/useReducedMotion'
-
-gsap.registerPlugin(ScrollToPlugin)
 
 /**
  * "Stone to Setting": two short clips (loose stone → finished silver piece) that play
- * one after another on their own once the chapter is on screen — no scroll-scrubbing.
+ * one after another on their own once the chapter is on screen. The page is never scrolled
+ * for the visitor.
  * Each stone's caption reveals when its piece is complete; the closing link reveals
- * after the last one. "Next" jumps to the following stone; on the last stone "Skip" (or
- * the clip ending) carries the visitor on to the next section. Pauses off-screen, has a
+ * after the last one. "Next" jumps to the following stone. Pauses off-screen, has a
  * pause button (WCAG 2.2.2), and shows the finished pieces as stills for reduced-motion
  * users or if autoplay is blocked.
  */
@@ -67,23 +63,6 @@ export default function StoneToSettingScene() {
     })
   }, [active, inView, paused, near, stillMode])
 
-  /** Glide the section after this one into place. */
-  const moveOn = useCallback(() => {
-    const next = sectionRef.current?.nextElementSibling
-    if (!next) return
-    // CSS smooth scrolling would fight the tween (and make autoKill think the visitor scrolled)
-    const html = document.documentElement
-    html.style.scrollBehavior = 'auto'
-    const restore = () => (html.style.scrollBehavior = '')
-    gsap.to(window, {
-      scrollTo: { y: next, autoKill: true },
-      duration: 1.1,
-      ease: 'power2.inOut',
-      onComplete: restore,
-      onInterrupt: restore,
-    })
-  }, [])
-
   const goTo = useCallback((i) => {
     setProgress(0)
     setActive(i)
@@ -93,13 +72,11 @@ export default function StoneToSettingScene() {
 
   const markDone = (i) => setDone((d) => d.map((x, j) => (j === i ? true : x)))
 
-  // Latest values for the delayed hand-off below
-  const inViewRef = useRef(inView)
+  // Latest value for the delayed hand-off below
   const activeRef = useRef(active)
   useEffect(() => {
-    inViewRef.current = inView
     activeRef.current = active
-  }, [inView, active])
+  }, [active])
 
   const onEnded = useCallback(
     (i) => {
@@ -107,23 +84,16 @@ export default function StoneToSettingScene() {
       // Brief hold on the finished piece (and its caption) before moving on — unless the
       // visitor already picked another stone in the meantime
       setTimeout(() => {
-        if (activeRef.current !== i) return
-        if (i < LAST) goTo(i + 1)
-        else if (inViewRef.current) moveOn()
+        if (activeRef.current === i && i < LAST) goTo(i + 1)
       }, 900)
     },
-    [goTo, moveOn]
+    [goTo]
   )
 
-  /** "Next" on stones 1-2, "Skip" on the last one. */
   function advance() {
     markDone(active)
     setPaused(false)
-    if (active < LAST) goTo(active + 1)
-    else {
-      videoRefs.current[active]?.pause()
-      moveOn()
-    }
+    goTo(active + 1)
   }
 
   function choose(i) {
@@ -141,7 +111,7 @@ export default function StoneToSettingScene() {
     <section
       ref={sectionRef}
       aria-label="From stone to setting"
-      className="relative flex min-h-[640px] w-full flex-col overflow-hidden bg-brand-forest-950 text-brand-linen-100 md:block md:h-screen"
+      className="relative flex min-h-[640px] w-full flex-col overflow-hidden bg-brand-forest-950 text-brand-linen-100 md:block md:h-svh"
     >
       {/* Media: full-bleed on desktop, top band on phones */}
       <div className="relative h-[56vh] min-h-[320px] w-full md:absolute md:inset-0 md:h-full">
@@ -173,11 +143,10 @@ export default function StoneToSettingScene() {
 
       {/* Copy */}
       <div className="relative z-10 flex flex-col gap-4 px-6 pb-10 pt-2 md:absolute md:left-16 md:top-1/2 md:w-[440px] md:-translate-y-1/2 md:p-0 lg:left-24">
-        <p className="text-sm text-brand-gold-300">Before it's jewellery, it's a stone</p>
-        <h2 className="font-display text-4xl leading-[1.05] md:text-6xl">Every piece begins with a single stone.</h2>
+        <h2 className="font-display text-4xl leading-[1.05] text-balance md:text-6xl">Every piece begins with a single stone.</h2>
 
         <div
-          className={`flex flex-col gap-1 transition-all duration-700 ${captionShown ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+          className={`flex flex-col gap-1 transition duration-700 ${captionShown ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
           aria-live="polite"
         >
           <p className="font-display text-2xl">
@@ -186,7 +155,7 @@ export default function StoneToSettingScene() {
           <a
             href={stone.href}
             tabIndex={captionShown ? 0 : -1}
-            className="w-fit text-sm font-medium text-brand-gold-300 underline decoration-brand-gold-500/60 underline-offset-4 hover:text-brand-linen-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold-400"
+            className="w-fit text-sm font-medium text-brand-gold-300 underline decoration-brand-gold-300/60 underline-offset-4 hover:text-brand-linen-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold-300"
           >
             {stone.link}
           </a>
@@ -201,7 +170,7 @@ export default function StoneToSettingScene() {
             type="button"
             onClick={() => choose(i)}
             aria-pressed={i === active}
-            className={`flex h-11 items-center gap-3 rounded-full px-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-brand-gold-400 md:flex-row-reverse ${
+            className={`flex h-11 items-center gap-3 px-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-brand-gold-300 md:flex-row-reverse ${
               i === active ? 'text-brand-linen-100' : 'text-brand-linen-100/60 hover:text-brand-linen-100'
             }`}
           >
@@ -220,7 +189,7 @@ export default function StoneToSettingScene() {
           <button
             type="button"
             onClick={() => setPaused((p) => !p)}
-            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-brand-linen-100/40 hover:border-brand-linen-100 focus-visible:outline-2 focus-visible:outline-brand-gold-400"
+            className="flex size-11 shrink-0 items-center justify-center border border-brand-linen-100/40 hover:border-brand-linen-100 focus-visible:outline-2 focus-visible:outline-brand-gold-300"
             aria-label={paused ? 'Play the stones' : 'Pause the stones'}
           >
             {paused ? (
@@ -233,23 +202,25 @@ export default function StoneToSettingScene() {
             {STONES.map((s, i) => (
               <span key={s.id} className="relative h-0.5 flex-1 overflow-hidden bg-brand-linen-100/20">
                 <span
-                  className="absolute inset-y-0 left-0 bg-brand-gold-500"
+                  className="absolute inset-y-0 left-0 bg-brand-gold-300"
                   style={{ width: `${done[i] && i !== active ? 100 : i === active ? Math.round(progress * 100) : 0}%` }}
                 />
               </span>
             ))}
           </div>
+          {active < LAST && (
           <button
             type="button"
             onClick={advance}
-            aria-label={active < LAST ? `Next stone: ${STONES[active + 1].label}` : 'Skip to the next section'}
-            className="flex h-11 shrink-0 items-center gap-2 rounded-full border border-brand-linen-100/40 px-5 text-sm font-medium hover:border-brand-linen-100 focus-visible:outline-2 focus-visible:outline-brand-gold-400"
+            aria-label={`Next stone: ${STONES[active + 1].label}`}
+            className="flex h-11 shrink-0 items-center gap-2 border border-brand-linen-100/40 px-5 text-sm font-medium hover:border-brand-linen-100 focus-visible:outline-2 focus-visible:outline-brand-gold-300"
           >
-            {active < LAST ? 'Next' : 'Skip'}
+            Next
             <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
               <path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
+          )}
         </div>
       )}
     </section>

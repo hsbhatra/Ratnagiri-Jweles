@@ -70,7 +70,7 @@ export default function VerifyEmailPage() {
       title="Check your email"
       intro={
         <>
-          We sent a 6-digit code to <strong className="font-medium text-brand-forest-950">{pending.email}</strong>. It
+          We sent a 6-digit code to <strong className="font-medium text-ink">{pending.email}</strong>. It
           expires in 10 minutes.
         </>
       }
@@ -89,7 +89,7 @@ export default function VerifyEmailPage() {
         className="space-y-6"
       >
         <div>
-          <p id={labelId} className="mb-2 text-sm font-medium text-brand-forest-900">
+          <p id={labelId} className="mb-2 text-sm font-medium text-ink">
             Verification code
           </p>
           <OtpInput value={code} onChange={onCodeChange} invalid={Boolean(error)} disabled={loading || expired} labelId={labelId} />
@@ -112,7 +112,7 @@ export default function VerifyEmailPage() {
           Verify email
         </Button>
 
-        <p className="text-sm text-brand-forest-900/75">
+        <p className="text-sm text-muted">
           Didn't get it? Check your spam folder, or{' '}
           {resendIn > 0 ? (
             <span>request a new code in {resendIn}s.</span>
@@ -121,7 +121,7 @@ export default function VerifyEmailPage() {
               type="button"
               onClick={resend}
               disabled={expired}
-              className="font-medium text-brand-forest-800 underline decoration-brand-gold-500/70 underline-offset-4 hover:text-brand-forest-950 focus-visible:outline-2 focus-visible:outline-brand-gold-500 disabled:opacity-50"
+              className="font-medium text-gold underline decoration-gold/70 underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-gold disabled:opacity-50"
             >
               send a new code
             </button>

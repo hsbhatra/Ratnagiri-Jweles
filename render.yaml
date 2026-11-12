@@ -32,5 +32,5 @@ services:
         sync: false
       - key: EMAIL_FROM
         sync: false # RatnaGiri Jewels <sender-verified-in-brevo@...>
-      - key: EMAIL_REPLY_TO
-        sync: false
+      - key: CLOUDINARY_URL
+        sync: false # cloudinary://<api_key>:<api_secret>@<cloud_name>

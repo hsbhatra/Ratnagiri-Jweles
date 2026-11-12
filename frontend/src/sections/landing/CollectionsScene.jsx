@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import useReducedMotion from '../../lib/useReducedMotion'
 import useRevealOnScroll from '../../lib/useRevealOnScroll'
 import rings from '../../assets/media/img/collection-1-rings.webp'
@@ -17,30 +18,29 @@ export default function CollectionsScene() {
   const sectionRef = useRevealOnScroll({ reducedMotion })
 
   return (
-    <section ref={sectionRef} data-intro-end className="bg-brand-linen-100 px-6 py-24 md:px-16">
-      <h2 className="font-display mb-12 text-center text-3xl text-brand-forest-900 md:text-4xl">
-        Collections
-      </h2>
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4">
-        {items.map((item) => (
-          <a
-            key={item.label}
-            href={item.href}
-            data-reveal
-            className="group block overflow-hidden rounded-sm"
-          >
-            <div className="aspect-[4/5] overflow-hidden bg-brand-forest-900/5">
-              <img
-                src={item.src}
-                alt={item.label}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </div>
-            <p className="mt-3 text-center font-display text-lg text-brand-forest-900">
-              {item.label}
-            </p>
-          </a>
-        ))}
+    <section ref={sectionRef} id="collections" className="scroll-mt-4 px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl">
+        <h2 className="mb-10 font-display text-4xl text-ink md:text-5xl">Collections</h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+          {items.map((item) => (
+            <Link
+              key={item.label}
+              to={item.href}
+              data-reveal
+              className="group block min-w-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
+            >
+              <div className="aspect-[4/5] overflow-hidden border border-line transition-colors group-hover:border-gold">
+                <img
+                  src={item.src}
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <p className="mt-3 font-display text-xl text-ink group-hover:text-gold">{item.label}</p>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   )

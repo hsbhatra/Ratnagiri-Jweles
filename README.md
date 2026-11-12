@@ -6,7 +6,7 @@ Specs (SRS, Architecture, STS) are kept separately as PDFs.
 ## Structure
 ```
 backend/    Express REST API (routes → middleware → controllers → services → models)
-frontend/   Vite + React SPA (Redux Toolkit, React Router, GSAP, Tailwind v4)
+frontend/   Vite + React SPA (Redux Toolkit, React Router, GSAP, Tailwind v4); look and parts: see DESIGN.md
 media/      raw design sources (not in git)
 netlify.toml, render.yaml   deployment config (see DEPLOY.md)
 BUGS.md, REGRESSION_CHECKLIST.md

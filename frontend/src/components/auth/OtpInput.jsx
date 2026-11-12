@@ -56,8 +56,8 @@ export default function OtpInput({ value, onChange, invalid = false, disabled = 
             fill(e.clipboardData.getData('text'), i)
           }}
           onFocus={(e) => e.target.select()}
-          className={`h-14 w-full min-w-0 rounded-[10px] border bg-white/70 text-center font-display text-3xl text-brand-forest-950 transition-colors focus:border-brand-forest-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-500/70 sm:h-16 ${
-            invalid ? 'border-red-700/70' : 'border-brand-forest-900/20'
+          className={`h-14 w-full min-w-0 rounded-none border bg-field text-center font-display text-3xl text-ink transition-colors focus:border-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 sm:h-16 ${
+            invalid ? 'border-danger/70' : 'border-line'
           }`}
         />
       ))}

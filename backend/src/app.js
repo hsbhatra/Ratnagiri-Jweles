@@ -12,7 +12,9 @@ import edgeProxy from './middleware/edgeProxy.js'
 import authRoutes from './routes/auth.routes.js'
 import healthRoutes from './routes/health.routes.js'
 import userRoutes from './routes/user.routes.js'
-// catalog/cart/checkout/order/admin routes mount here module-by-module
+import catalogRoutes from './routes/catalog.routes.js'
+import adminRoutes from './routes/admin.routes.js'
+// cart/checkout/order routes mount here module-by-module
 
 const app = express()
 
@@ -49,6 +51,8 @@ app.use(
 
 app.use('/api/v1/auth', authRoutes)
 app.use('/api/v1/users', userRoutes)
+app.use('/api/v1', catalogRoutes)
+app.use('/api/v1/admin', adminRoutes)
 
 app.use(notFoundHandler)
 app.use(errorHandler)

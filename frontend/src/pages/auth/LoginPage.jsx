@@ -58,12 +58,12 @@ export default function LoginPage() {
         intro="For your security, an account can stay signed in on two devices at a time. Sign out of one to continue here."
         image={ringsImg}
       >
-        <ul className="divide-y divide-brand-forest-900/10 border-y border-brand-forest-900/10">
+        <ul className="divide-y divide-line border-y border-line">
           {sessions.map((s) => (
             <li key={s.id} className="flex items-center justify-between gap-4 py-4">
               <div className="min-w-0">
-                <p className="font-medium text-brand-forest-950">{s.deviceLabel}</p>
-                <p className="text-[13px] text-brand-forest-900/65">Signed in {formatWhen(s.createdAt)}, last active {formatWhen(s.lastUsedAt)}</p>
+                <p className="font-medium text-ink">{s.deviceLabel}</p>
+                <p className="text-[13px] text-muted">Signed in {formatWhen(s.createdAt)}, last active {formatWhen(s.lastUsedAt)}</p>
               </div>
               <Button
                 variant="outline"
@@ -82,7 +82,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setSessions(null)}
-            className="text-sm font-medium text-brand-forest-800 underline decoration-brand-gold-500/70 underline-offset-4 hover:text-brand-forest-950 focus-visible:outline-2 focus-visible:outline-brand-gold-500"
+            className="text-sm font-medium text-gold underline decoration-gold/70 underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-gold"
           >
             Cancel and stay signed out here
           </button>

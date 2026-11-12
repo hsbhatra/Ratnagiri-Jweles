@@ -1,9 +1,9 @@
 import { useId, useState } from 'react'
 
 export const inputClass =
-  'h-12 w-full rounded-[10px] border border-brand-forest-900/20 bg-white/70 px-4 text-[15px] text-brand-forest-950 ' +
-  'placeholder:text-brand-forest-900/40 transition-colors focus:border-brand-forest-800 focus:outline-none ' +
-  'focus-visible:ring-2 focus-visible:ring-brand-gold-500/70 aria-[invalid=true]:border-red-700/70'
+  'h-12 w-full rounded-none border border-line bg-field px-4 text-[15px] text-ink ' +
+  'placeholder:text-muted transition-colors focus:border-ink focus:outline-none ' +
+  'focus-visible:ring-2 focus-visible:ring-gold/70 aria-[invalid=true]:border-danger/70'
 
 /** Labelled input with hint + error wired up for screen readers. */
 export default function Field({ label, error, hint, className = '', children, ...inputProps }) {
@@ -11,7 +11,7 @@ export default function Field({ label, error, hint, className = '', children, ..
   const describedBy = [error && `${id}-error`, hint && `${id}-hint`].filter(Boolean).join(' ') || undefined
   return (
     <div className={className}>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-brand-forest-900">
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-ink">
         {label}
       </label>
       {children ? (
@@ -20,12 +20,12 @@ export default function Field({ label, error, hint, className = '', children, ..
         <input id={id} aria-invalid={Boolean(error)} aria-describedby={describedBy} className={inputClass} {...inputProps} />
       )}
       {hint && !error && (
-        <p id={`${id}-hint`} className="mt-1.5 text-[13px] text-brand-forest-900/60">
+        <p id={`${id}-hint`} className="mt-1.5 text-[13px] text-muted">
           {hint}
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} className="mt-1.5 text-[13px] text-red-800">
+        <p id={`${id}-error`} className="mt-1.5 text-[13px] text-danger">
           {error}
         </p>
       )}
@@ -50,7 +50,7 @@ export function PasswordField({ label = 'Password', error, hint, ...inputProps }
           <button
             type="button"
             onClick={() => setVisible((v) => !v)}
-            className="absolute inset-y-0 right-0 rounded-r-[10px] px-4 text-[13px] font-medium text-brand-forest-800 hover:text-brand-forest-950 focus-visible:outline-2 focus-visible:outline-brand-gold-500"
+            className="absolute inset-y-0 right-0 rounded-none px-4 text-[13px] font-medium text-gold hover:text-ink focus-visible:outline-2 focus-visible:outline-gold"
             aria-pressed={visible}
           >
             {visible ? 'Hide' : 'Show'}
